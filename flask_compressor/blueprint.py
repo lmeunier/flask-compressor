@@ -46,5 +46,9 @@ def render_asset(bundle_name, asset_index, asset_name):
         # asset not found
         abort(404)
 
+    # check the asset name
+    if asset_name is not None and asset_name != asset.name:
+        abort(404)
+
     content = asset.content
     return Response(content, mimetype=bundle.mimetype)
