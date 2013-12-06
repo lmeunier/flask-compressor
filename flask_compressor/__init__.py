@@ -149,7 +149,7 @@ class Asset(object):
     """
         An `Asset` object is a Python representation of a web asset used in
         your web application. An asset could be a Javascript file or some CSS
-        properties, or a collection of one or sereval assets.
+        properties.
 
         An asset instance can have none or several processors. Each processor
         is called to alter the content of the asset (for example, you can add
@@ -171,17 +171,11 @@ class Asset(object):
                               "type='{mimetype}'>"
     default_mimetype = "text/plain"
 
-    def __init__(self, name, assets=None, sources=None, contents=None,
-                 processors=None, inline_template=None, linked_template=None,
-                 mimetype=None):
+    def __init__(self, name, sources=None, contents=None, processors=None,
+                 inline_template=None, linked_template=None, mimetype=None):
         """ Initializes an :class:`Asset` instance.
 
-        The content of an asset can be loaded from zero or several child assets
-        (with the `assets` argument), a file (with the `source` argument) or
-        passed directly as a string (with the `contents` argument).
-
         Args:
-            assets: a list of :class:`Asset` objects (default: `[]`)
             name: the name of the asset, used to uniquely identify it
             sources: a list of filenames from wich the content will be loaded.
                 Filenames will be appended to the static folder of the Flask
@@ -201,7 +195,6 @@ class Asset(object):
             mimetype: the mimetype corresponding to the final content of the
                 asset (default: `text/plain`)
         """
-        self.assets = assets or []
         self.name = name
         self.sources = sources or []
         self.contents = contents
