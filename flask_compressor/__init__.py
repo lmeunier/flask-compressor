@@ -140,10 +140,6 @@ class Asset(object):
         a processor to compile `SASS <http://sass-lang.com>`_ files into
         regular CSS).
 
-        An asset have a template used to build a string representation of
-        processed contents from assets. The template is usually used to add
-        `<style></style>` or `<script></script>` html tag to the final result.
-
         >>> from flask.ext.compressor import Asset
         >>> css_content = '''
         ... html {
@@ -154,10 +150,13 @@ class Asset(object):
         >>> print my_asset
         'html{background-color:red}'
     """
-    default_template = "{content}"
+    default_inline_template = "{content}"
+    default_linked_template = "<link ref='external' href='{url}' "\
+                              "type='{mimetype}'>"
+    default_mimetype = "text/plain"
 
-    def __init__(self, assets=None, sources=None, contents=None,
-                 processors=None, template=None):
+    def __init__(self, assets=None, sources=None, contents=None, processors=None,
+                 inline_template=None, linked_template=None, mimetype=None):
         """ Initializes an :class:`Asset` instance.
 
         The content of an asset can be loaded from zero or several child assets
@@ -172,16 +171,25 @@ class Asset(object):
             contents: the content of the asset, or `None`
             processors: a list a processor registered in the
                 :class:`Compressor` extension (default: `[]`)
-            template: A string used to build a string representation of the
-                processed content. The template is a regular Python string
+            inline_template: A string used to build a string representation of
+                the processed content. The template is a regular Python string
                 used with the "new" Python 3 `format` syntax, and must
                 contains a `content` placeholder. (default: `{content}`)
+            linked_template: A string used to build a link to an external
+                version of the processed content. The template is a regular
+                Python string used with the "new" Python 3 `format` syntax.
+                Available placeholders are `url` and `mimetype`. (default:
+                `<link ref='external' href='{url}' type='{mimetype}'>`)
+            mimetype: the mimetype corresponding to the final content of the
+                asset (default: `text/plain`)
         """
         self.assets = assets or []
         self.sources = sources or []
         self.contents = contents
         self.processors = processors or []
-        self.template = template or self.default_template
+        self.inline_template = inline_template or self.default_inline_template
+        self.linked_template = linked_template or self.default_linked_template
+        self.mimetype = mimetype or self.default_mimetype
 
     def get_content(self):
         """ Returns the processed content of the asset. """
@@ -216,10 +224,16 @@ class Asset(object):
 
 class CSSAsset(Asset):
     """ A helper class to use a :class:`Asset` objects with CSS assets. """
-    default_template = '<style type="text/css">{content}</style>'
+    default_inline_template = '<style type="{mimetype}">{content}</style>'
+    default_linked_template = '<link type="{mimetype}" rel="stylesheet" ' \
+                              'href="{url}">'
+    default_mimetype = 'text/css'
 
 
 class JSAsset(Asset):
     """ A helper class to use a :class:`Asset` objects with Javascript assets.
     """
-    default_template = '<script type="text/javascript">{content}</script>'
+    default_inline_template = '<script type="{mimetype}">{content}</script>'
+    default_linked_tempalte = '<script type="{mimetype}" src="{url}">' \
+                              '</script>'
+    default_mimetype = 'text/javascript'
