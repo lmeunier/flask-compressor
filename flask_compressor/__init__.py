@@ -13,6 +13,7 @@ from __future__ import unicode_literals, absolute_import, division, \
     print_function
 import os
 from flask import current_app
+from .blueprint import compressor_blueprint
 from .templating import compressor as compressor_template_helper
 
 
@@ -56,6 +57,9 @@ class Compressor(object):
 
         # register the Compressor extension in the Flask app
         app.extensions['compressor'] = self
+
+        # register the blueprint
+        app.register_blueprint(compressor_blueprint, url_prefix='/_compressor')
 
     def register_asset(self, asset, replace=False):
         """ Add an asset in the list of available assets.
@@ -226,7 +230,7 @@ class Asset(object):
 
         return self.template.format(content=content)
 
-    def _load_contents_from_file(self, filename):
+    def load_contents_from_file(self, filename):
         """ Load the content from a file.
 
             Args:
