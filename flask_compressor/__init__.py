@@ -156,7 +156,7 @@ class Asset(object):
     """
     default_template = "{content}"
 
-    def __init__(self, assets=None, source=None, contents=None,
+    def __init__(self, assets=None, sources=None, contents=None,
                  processors=None, template=None):
         """ Initializes an :class:`Asset` instance.
 
@@ -166,9 +166,9 @@ class Asset(object):
 
         Args:
             assets: a list of :class:`Asset` objects (default: `[]`)
-            source : the path to the file from wich the content will be
-                loaded, or `None`. `source` will be appended to the static
-                folder of the Flask application to find to file.
+            sources: a list of filenames from wich the content will be loaded.
+                Filenames will be appended to the static folder of the Flask
+                application to find to file. (default: `[]`)
             contents: the content of the asset, or `None`
             processors: a list a processor registered in the
                 :class:`Compressor` extension (default: `[]`)
@@ -177,24 +177,24 @@ class Asset(object):
                 used with the "new" Python 3 `format` syntax, and must
                 contains a `content` placeholder. (default: `{content}`)
         """
-        self.source = source
-        self.contents = contents
         self.assets = assets or []
+        self.sources = sources or []
+        self.contents = contents
         self.processors = processors or []
         self.template = template or self.default_template
 
     def get_content(self):
-        """ Returns the processed content of the asset.  """
+        """ Returns the processed content of the asset. """
         content = ''
 
         for asset in self.assets:
             content = content + asset.get_content()
 
+        for filename in self.sources:
+            content = content + self._load_contents_from_file(filename)
+
         if self.contents is not None:
             content = content + self.contents
-
-        if self.source is not None:
-            content = content + self._load_contents_from_file()
 
         # apply processors
         compressor = current_app.extensions['compressor']
@@ -203,10 +203,15 @@ class Asset(object):
 
         return self.template.format(content=content)
 
-    def _load_contents_from_file(self):
-        """ Load the content from a file """
-        filename = os.path.join(current_app.static_folder, self.source)
-        return open(filename).read()
+    def _load_contents_from_file(self, filename):
+        """ Load the content from a file.
+
+            Args:
+                filename: A path to the file to load contents from. The file
+                    will be searched in the static folder of the Flask app.
+        """
+        abs_path = os.path.join(current_app.static_folder, filename)
+        return open(abs_path).read()
 
 
 class CSSAsset(Asset):
