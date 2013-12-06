@@ -10,18 +10,33 @@ from jinja2 import Markup
 from flask import current_app
 
 
-def compressor(asset_name, **extra):
+def compressor(asset_name, inline=True):
     """ Returns the processed content of an asset.
 
             {{ compressor('asset_name') }}
 
         Args:
             asset_name: the name of the asset
-            extra: extra parameters passed to :func:`Asset.get_content`
+            inline: If `True`, the asset's content is added directly in the
+                output. If `False`, the asset's content is linked to a
+                downloadable ressource. (default: `True`)
 
         Returns:
             the processed content of an asset
     """
     compressor_ext = current_app.extensions['compressor']
     asset = compressor_ext.get_asset(asset_name)
-    return Markup(asset.get_content(**extra))
+
+    if inline:
+        if current_app.debug:
+            content = asset.get_inline_contents()
+        else:
+            content = asset.get_inline_content()
+    else:
+        if current_app.debug:
+            content = asset.get_linked_contents()
+        else:
+            content = asset.get_linked_content()
+
+    # mark the string as safe, so HTML tags won't be escaped
+    return Markup(content)
