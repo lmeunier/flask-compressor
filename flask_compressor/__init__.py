@@ -57,14 +57,26 @@ class Compressor(object):
         # register the Compressor extension in the Flask app
         app.extensions['compressor'] = self
 
-    def register_asset(self, name, asset):
+    def register_asset(self, asset, replace=False):
         """ Add an asset in the list of available assets.
 
         Args:
-            name: the name to identify the asset, must be unique
-            asset (:class:`Asset`): the asset to register
+            asset : the :class:`Asset` to register
+            replace: If `False` and a asset is already registered with the
+                same name, raises an exception. Use `True` to replace an
+                existing asset. (default `False`)
+
+        Raise:
+            CompressorException: If an asset with the same name is already
+                registered.
         """
-        self._assets[name] = asset
+        if asset.name in self._assets and not replace:
+            raise CompressorException("An asset named '{}' is already "
+                                      "registered. Use `replace=True` to "
+                                      "replace an existing asset."
+                                      "".format(asset.name))
+
+        self._assets[asset.name] = asset
 
     def get_asset(self, name):
         """ Get the asset identified by its `name`.
@@ -155,8 +167,9 @@ class Asset(object):
                               "type='{mimetype}'>"
     default_mimetype = "text/plain"
 
-    def __init__(self, assets=None, sources=None, contents=None, processors=None,
-                 inline_template=None, linked_template=None, mimetype=None):
+    def __init__(self, name, assets=None, sources=None, contents=None,
+                 processors=None, inline_template=None, linked_template=None,
+                 mimetype=None):
         """ Initializes an :class:`Asset` instance.
 
         The content of an asset can be loaded from zero or several child assets
@@ -165,6 +178,7 @@ class Asset(object):
 
         Args:
             assets: a list of :class:`Asset` objects (default: `[]`)
+            name: the name of the asset, used to uniquely identify it
             sources: a list of filenames from wich the content will be loaded.
                 Filenames will be appended to the static folder of the Flask
                 application to find to file. (default: `[]`)
@@ -184,6 +198,7 @@ class Asset(object):
                 asset (default: `text/plain`)
         """
         self.assets = assets or []
+        self.name = name
         self.sources = sources or []
         self.contents = contents
         self.processors = processors or []
