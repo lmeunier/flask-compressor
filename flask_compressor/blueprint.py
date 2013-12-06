@@ -9,24 +9,27 @@ from __future__ import unicode_literals, absolute_import, division, \
 from flask import Blueprint, current_app, abort, Response
 
 
-compressor_blueprint = Blueprint('compressor', __name__)
+blueprint = Blueprint('compressor', __name__)
 
 
-@compressor_blueprint.route('/asset/<asset_name>')
-def render_asset(asset_name):
+@blueprint.route('/bundle/<bundle_name>')
+def render_bundle(bundle_name):
     """ Render the complete asset content.
 
     Args:
         asset_name: name of the asset to render
     """
     compressor = current_app.extensions['compressor']
-    asset = compressor.get_asset(asset_name)
-    content = asset.get_content()
-    return Response(content, mimetype=asset.mimetype)
+    bundle = compressor.get_bundle(bundle_name)
+    content = bundle.get_content()
+    return Response(content, mimetype=bundle.mimetype)
 
 
-@compressor_blueprint.route('/asset/<asset_name>/sources/<path:filename>')
-def render_asset_source(asset_name, filename):
+@blueprint.route('/bundle/<bundle_name>/asset/<int:asset_index>/',
+                 defaults={'asset_name': None})
+@blueprint.route('/bundle/<bundle_name>/asset/<int:asset_index>/'
+                 '<path:asset_name>')
+def render_asset(bundle_name, asset_index, asset_name):
     """ Render a single source from an asset.
 
     Args:
@@ -35,26 +38,13 @@ def render_asset_source(asset_name, filename):
             found in the asset, returns a 404 error.
     """
     compressor = current_app.extensions['compressor']
-    asset = compressor.get_asset(asset_name)
+    bundle = compressor.get_bundle(bundle_name)
 
-    if not filename in asset.sources:
+    try:
+        asset = bundle.assets[asset_index]
+    except IndexError:
+        # asset not found
         abort(404)
 
-    content = asset.load_contents_from_file(filename)
-    content = asset.apply_processors(content)
-    return Response(content, mimetype=asset.mimetype)
-
-
-@compressor_blueprint.route('/asset/<asset_name>/contents.css')
-def render_asset_contents(asset_name):
-    """ Render the content from an asset.
-
-    Args:
-        asset_name: name of the asset to render
-    """
-    compressor = current_app.extensions['compressor']
-    asset = compressor.get_asset(asset_name)
-
-    content = asset.contents
-    content = asset.apply_processors(content)
-    return Response(content, mimetype=asset.mimetype)
+    content = asset.content
+    return Response(content, mimetype=bundle.mimetype)

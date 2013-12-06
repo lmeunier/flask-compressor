@@ -10,7 +10,7 @@ from jinja2 import Markup
 from flask import current_app
 
 
-def compressor(asset_name, inline=True):
+def compressor(bundle_name, inline=True):
     """ Returns the processed content of an asset.
 
             {{ compressor('asset_name') }}
@@ -25,18 +25,18 @@ def compressor(asset_name, inline=True):
             the processed content of an asset
     """
     compressor_ext = current_app.extensions['compressor']
-    asset = compressor_ext.get_asset(asset_name)
+    bundle = compressor_ext.get_bundle(bundle_name)
 
     if inline:
         if current_app.debug:
-            content = asset.get_inline_contents()
+            content = bundle.get_inline_contents()
         else:
-            content = asset.get_inline_content()
+            content = bundle.get_inline_content()
     else:
         if current_app.debug:
-            content = asset.get_linked_contents()
+            content = bundle.get_linked_contents()
         else:
-            content = asset.get_linked_content()
+            content = bundle.get_linked_content()
 
     # mark the string as safe, so HTML tags won't be escaped
     return Markup(content)

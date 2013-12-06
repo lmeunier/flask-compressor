@@ -13,7 +13,7 @@ from __future__ import unicode_literals, absolute_import, division, \
     print_function
 import os
 from flask import current_app, url_for
-from .blueprint import compressor_blueprint
+from .blueprint import blueprint as compressor_blueprint
 from .templating import compressor as compressor_template_helper
 
 
@@ -34,7 +34,7 @@ class Compressor(object):
         Args:
             app: your Flask application or `None` if you use :meth:`init_app`
         """
-        self._assets = {}
+        self._bundles = {}
         self._processors = {}
 
         self.app = app
@@ -61,43 +61,43 @@ class Compressor(object):
         # register the blueprint
         app.register_blueprint(compressor_blueprint, url_prefix='/_compressor')
 
-    def register_asset(self, asset, replace=False):
-        """ Add an asset in the list of available assets.
+    def register_bundle(self, bundle, replace=False):
+        """ Add a bundle in the list of available bundles.
 
         Args:
-            asset : the :class:`Asset` to register
-            replace: If `False` and a asset is already registered with the
+            bundle : the :class:`Bundle` to register
+            replace: If `False` and a bundle is already registered with the
                 same name, raises an exception. Use `True` to replace an
-                existing asset. (default `False`)
+                existing bundle. (default `False`)
 
         Raise:
-            CompressorException: If an asset with the same name is already
+            CompressorException: If a bundle with the same name is already
                 registered.
         """
-        if asset.name in self._assets and not replace:
-            raise CompressorException("An asset named '{}' is already "
+        if bundle.name in self._bundles and not replace:
+            raise CompressorException("A bundle named '{}' is already "
                                       "registered. Use `replace=True` to "
-                                      "replace an existing asset."
-                                      "".format(asset.name))
+                                      "replace an existing bundle."
+                                      "".format(bundle.name))
 
-        self._assets[asset.name] = asset
+        self._bundles[bundle.name] = bundle
 
-    def get_asset(self, name):
-        """ Get the asset identified by its `name`.
+    def get_bundle(self, name):
+        """ Get the bundle identified by its `name`.
 
         Args:
-            name: the name of the asset
+            name: the name of the bundle
 
         Returns:
-            An :class:`Asset` object.
+            A :class:`Bundle` object.
 
         Raises:
-            CompressorException: If no asset are associated to the `name`.
+            CompressorException: If no bundle are associated to the `name`.
         """
-        if not name in self._assets:
-            raise CompressorException("asset '{}' not found.".format(name))
+        if not name in self._bundles:
+            raise CompressorException("Bundle '{}' not found.".format(name))
 
-        return self._assets[name]
+        return self._bundles[name]
 
     def register_default_processors(self):
         """ Register default processors.
@@ -145,66 +145,52 @@ class Compressor(object):
         return self._processors[name]
 
 
-class Asset(object):
+class Bundle(object):
     """
-        An `Asset` object is a Python representation of a web asset used in
-        your web application. An asset could be a Javascript file or some CSS
+        A `Bundle` object is a collection of a web assets used in your web
+        application. An asset could be a Javascript file or some CSS
         properties.
 
-        An asset instance can have none or several processors. Each processor
-        is called to alter the content of the asset (for example, you can add
-        a processor to compile `SASS <http://sass-lang.com>`_ files into
-        regular CSS).
-
-        >>> from flask.ext.compressor import Asset
-        >>> css_content = '''
-        ... html {
-        ...     background-color: red;
-        ... }
-        ... '''
-        >>> my_asset = Asset(contents=css_content, processors=['cssmin'])
-        >>> print my_asset
-        'html{background-color:red}'
+        A bundle instance can have none or several processors. Each processor
+        is called to alter the content of the concatenation of all assets in
+        the bundle.
     """
     default_inline_template = "{content}"
     default_linked_template = "<link ref='external' href='{url}' "\
                               "type='{mimetype}'>"
     default_mimetype = "text/plain"
 
-    def __init__(self, name, sources=None, contents=None, processors=None,
+    def __init__(self, name, assets=None, processors=None,
                  inline_template=None, linked_template=None, mimetype=None):
-        """ Initializes an :class:`Asset` instance.
+        """ Initializes a :class:`Bundle` instance.
 
         Args:
-            name: the name of the asset, used to uniquely identify it
-            sources: a list of filenames from wich the content will be loaded.
-                Filenames will be appended to the static folder of the Flask
-                application to find to file. (default: `[]`)
-            contents: the content of the asset, or `None`
+            name: the name of the bundle, used to uniquely identify it
+            assets: a list of :class:`Asset` objects (default: `[]`)
             processors: a list a processor registered in the
                 :class:`Compressor` extension (default: `[]`)
             inline_template: A string used to build a string representation of
                 the processed content. The template is a regular Python string
-                used with the "new" Python 3 `format` syntax, and must
-                contains a `content` placeholder. (default: `{content}`)
+                used with the "new" Python 3 `format` syntax. AVailable
+                placeholders are `content` and `mimetype`. (default:
+                `{content}`)
             linked_template: A string used to build a link to an external
-                version of the processed content. The template is a regular
+                version of the bundle content. The template is a regular
                 Python string used with the "new" Python 3 `format` syntax.
                 Available placeholders are `url` and `mimetype`. (default:
                 `<link ref='external' href='{url}' type='{mimetype}'>`)
             mimetype: the mimetype corresponding to the final content of the
-                asset (default: `text/plain`)
+                bundle (default: `text/plain`)
         """
         self.name = name
-        self.sources = sources or []
-        self.contents = contents
+        self.assets = assets or []
         self.processors = processors or []
         self.inline_template = inline_template or self.default_inline_template
         self.linked_template = linked_template or self.default_linked_template
         self.mimetype = mimetype or self.default_mimetype
 
     def apply_processors(self, data):
-        """ Apply all processors of this asset to data.
+        """ Apply all processors to the provided data.
 
         Args:
             data: can be either a string or a list of strings
@@ -230,23 +216,20 @@ class Asset(object):
         return contents
 
     def get_contents(self, apply_processors=True):
-        """ Returns a list of all contents in this asset.
+        """ Returns a list with the content of each assets.
 
         Args:
-            apply_processors: indicate if processors from the asset should
-                be applied to all contents (default `True`)
+            apply_processors: indicate if processors from the bundle should
+                be applied to each contents (default `True`)
 
         Returns:
-            a list of strings, each string corresponding to a source of
-            content in the asset
+            a list of strings, each string corresponding to the content of an
+            asset
         """
         contents = []
 
-        for filename in self.sources:
-            contents.append(self.load_contents_from_file(filename))
-
-        if self.contents is not None:
-            contents.append(self.contents)
+        for asset in self.assets:
+            contents.append(asset.content)
 
         # apply processors
         if apply_processors:
@@ -255,11 +238,11 @@ class Asset(object):
         return contents
 
     def get_content(self, apply_processors=True):
-        """ Concatenate all contents from the asset in a single string.
+        """ Concatenate the content from each assets in a single string.
 
         Args:
-            apply_processors: indicate if processors from the asset should
-                be applied to the content (default `True`)
+            apply_processors: indicate if processors from the bundle should
+                be applied to the final content (default `True`)
 
         Returns:
             a string
@@ -273,16 +256,16 @@ class Asset(object):
         return content
 
     def get_inline_content(self):
-        """ Return the content of the asset formatted with the
-            `inline_template` template. Available placeholders are `content`
-            and `mimetype`. """
+        """ Return the content of the bundle formatted with the
+            `inline_template` template. Available placeholders for the
+            tempalte are `content` and `mimetype`. """
         content = self.get_content()
         return self.inline_template.format(content=content,
                                            mimetype=self.mimetype)
 
     def get_inline_contents(self):
-        """ Similar to :meth:`get_inline_content`, except that all sources
-            from the asset are in their own `inline_template`. """
+        """ Similar to :meth:`get_inline_content`, except that all assets
+            from the bundle are in their own `inline_template`. """
         contents = self.get_contents()
         return '\n'.join(
             [self.inline_template.format(content=content,
@@ -291,53 +274,123 @@ class Asset(object):
         )
 
     def get_linked_content(self):
-        """ Return a link to the content of the asset, the link is formatted
-            with the`linked_template` template. Available placeholders are
-            `url` and `mimetype`. """
-        url = url_for('compressor.render_asset', asset_name=self.name)
+        """ Return a link to the content of the bundle, the link is formatted
+            with the`linked_template` template. Available placeholders for the
+            template are `url` and `mimetype`. """
+        url = url_for('compressor.render_bundle', bundle_name=self.name)
         return self.linked_template.format(url=url, mimetype=self.mimetype)
 
     def get_linked_contents(self):
-        """ Similar to :meth:`get_linked_content`, except that all sources
-            from the asset are in their own `linked_template`. """
+        """ Similar to :meth:`get_linked_content`, except that all assets
+            from the bundle are in their own `linked_template`. """
         urls = []
 
-        for filename in self.sources:
-            urls.append(url_for('compressor.render_asset_source',
-                                asset_name=self.name, filename=filename))
-
-        if self.contents is not None:
-            urls.append(url_for('compressor.render_asset_contents',
-                                asset_name=self.name))
+        for index, asset in enumerate(self.assets):
+            urls.append(url_for('compressor.render_asset',
+                                bundle_name=self.name,
+                                asset_index=index,
+                                asset_name=asset.name))
 
         return '\n'.join(
             [self.linked_template.format(url=url, mimetype=self.mimetype)
              for url in urls]
         )
 
-    def load_contents_from_file(self, filename):
-        """ Load the content from a file.
 
-            Args:
-                filename: A path to the file to load contents from. The file
-                    will be searched in the static folder of the Flask app.
-        """
-        abs_path = os.path.join(current_app.static_folder, filename)
-        return open(abs_path).read()
-
-
-class CSSAsset(Asset):
-    """ A helper class to use a :class:`Asset` objects with CSS assets. """
+class CSSBundle(Bundle):
+    """ A helper class to use a :class:`Bundle` objects with CSS assets. """
     default_inline_template = '<style type="{mimetype}">{content}</style>'
     default_linked_template = '<link type="{mimetype}" rel="stylesheet" ' \
                               'href="{url}">'
     default_mimetype = 'text/css'
 
 
-class JSAsset(Asset):
-    """ A helper class to use a :class:`Asset` objects with Javascript assets.
+class JSBundle(Bundle):
+    """ A helper class to use a :class:`Bundle` objects with Javascript assets.
     """
     default_inline_template = '<script type="{mimetype}">{content}</script>'
     default_linked_tempalte = '<script type="{mimetype}" src="{url}">' \
                               '</script>'
     default_mimetype = 'text/javascript'
+
+
+class Asset(object):
+    """
+        An asset is the equivalent of an external ressource like a Javascript
+        or a CSS file.
+
+        Processors can be applied to the content of an asset. For exemple,
+        your asset can point to a `SASS <http://sass-lang.com>`_ file and use
+        a processor to convert it to regular CSS content.
+    """
+    def __init__(self, content='', processors=None):
+        """ Initializes an :class:`Asset` instance.
+
+        Args:
+            content: the content of the asset (default: empty string)
+            processors: a list a processor registered in the
+                :class:`Compressor` extension (default: `[]`)
+        """
+        self._content = content
+        self.processors = processors or []
+
+    def apply_processors(self, content):
+        """ Apply all processors to the provided content.
+
+        Args:
+            content: the content to be processed
+
+        Returns:
+            Modified content with all processors applied
+        """
+        # apply all processors
+        compressor = current_app.extensions['compressor']
+        for name in self.processors:
+            processor = compressor.get_processor(name)
+            content = processor(content)
+
+        return content
+
+    @property
+    def content(self):
+        """ Return the content of the asset after being altered by the
+        processors. """
+        return self.apply_processors(self.raw_content)
+
+    @property
+    def name(self):
+        """ Return (if available) a name to identify the asset. """
+        return None
+
+    @property
+    def raw_content(self):
+        """ Return the raw content of the asset, without any modification. """
+        return self._content
+
+
+class FileAsset(Asset):
+    """
+        A specialized :class:`Asset` class that allow to load the content from
+        a file. The file must be presents in the static folder of the Flask
+        application.
+    """
+    def __init__(self, filename, *args, **kwargs):
+        """ Initializes a :class:`FileAsset` instance.
+
+        Args:
+            filename: load content from the file identified by `filename`,
+                `filename` is a path relative to the static folder of the
+                Flask application
+        """
+        self.filename = filename
+        super(FileAsset, self).__init__(*args, **kwargs)
+
+    @property
+    def raw_content(self):
+        """ Return the content of the file `self.filename`. """
+        abs_path = os.path.join(current_app.static_folder, self.filename)
+        return open(abs_path).read()
+
+    @property
+    def name(self):
+        return self.filename
