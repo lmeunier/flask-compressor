@@ -383,13 +383,21 @@ class FileAsset(Asset):
                 Flask application
         """
         self.filename = filename
-        super(FileAsset, self).__init__(*args, **kwargs)
+        super(FileAsset, self).__init__(None, *args, **kwargs)
 
     @property
     def raw_content(self):
         """ Return the content of the file `self.filename`. """
+
+        # do not reload file on each call if app is not in debug mode and the
+        # file is already loaded
+        if not current_app.debug and self._content is not None:
+            return self._content
+
+        # if debug mode is enabled, reload the file on each call
         abs_path = os.path.join(current_app.static_folder, self.filename)
-        return open(abs_path).read()
+        self._content = open(abs_path).read()
+        return self._content
 
     @property
     def name(self):
