@@ -12,7 +12,7 @@
 from __future__ import unicode_literals, absolute_import, division, \
     print_function
 import os
-from flask import current_app
+from flask import current_app, url_for
 from .blueprint import compressor_blueprint
 from .templating import compressor as compressor_template_helper
 
@@ -203,25 +203,117 @@ class Asset(object):
         self.linked_template = linked_template or self.default_linked_template
         self.mimetype = mimetype or self.default_mimetype
 
-    def get_content(self):
-        """ Returns the processed content of the asset. """
-        content = ''
+    def apply_processors(self, data):
+        """ Apply all processors of this asset to data.
 
-        for asset in self.assets:
-            content = content + asset.get_content()
+        Args:
+            data: can be either a string or a list of strings
 
-        for filename in self.sources:
-            content = content + self._load_contents_from_file(filename)
+        Returns:
+            Modified data with all processors applied. Returns the same
+            type as `data` (a string or a list of strings).
+        """
+        contents = data
 
-        if self.contents is not None:
-            content = content + self.contents
+        if isinstance(data, basestring):
+            contents = [data]
 
-        # apply processors
+        # apply all processors
         compressor = current_app.extensions['compressor']
         for name in self.processors:
-            content = compressor.get_processor(name)(content)
+            processor = compressor.get_processor(name)
+            contents = [processor(content) for content in contents]
 
-        return self.template.format(content=content)
+        if isinstance(data, basestring):
+            return contents[0]
+
+        return contents
+
+    def get_contents(self, apply_processors=True):
+        """ Returns a list of all contents in this asset.
+
+        Args:
+            apply_processors: indicate if processors from the asset should
+                be applied to all contents (default `True`)
+
+        Returns:
+            a list of strings, each string corresponding to a source of
+            content in the asset
+        """
+        contents = []
+
+        for filename in self.sources:
+            contents.append(self.load_contents_from_file(filename))
+
+        if self.contents is not None:
+            contents.append(self.contents)
+
+        # apply processors
+        if apply_processors:
+            contents = self.apply_processors(contents)
+
+        return contents
+
+    def get_content(self, apply_processors=True):
+        """ Concatenate all contents from the asset in a single string.
+
+        Args:
+            apply_processors: indicate if processors from the asset should
+                be applied to the content (default `True`)
+
+        Returns:
+            a string
+        """
+        content = '\n'.join(self.get_contents(apply_processors=False))
+
+        # apply processors
+        if apply_processors:
+            content = self.apply_processors(content)
+
+        return content
+
+    def get_inline_content(self):
+        """ Return the content of the asset formatted with the
+            `inline_template` template. Available placeholders are `content`
+            and `mimetype`. """
+        content = self.get_content()
+        return self.inline_template.format(content=content,
+                                           mimetype=self.mimetype)
+
+    def get_inline_contents(self):
+        """ Similar to :meth:`get_inline_content`, except that all sources
+            from the asset are in their own `inline_template`. """
+        contents = self.get_contents()
+        return '\n'.join(
+            [self.inline_template.format(content=content,
+                                         mimetype=self.mimetype)
+             for content in contents]
+        )
+
+    def get_linked_content(self):
+        """ Return a link to the content of the asset, the link is formatted
+            with the`linked_template` template. Available placeholders are
+            `url` and `mimetype`. """
+        url = url_for('compressor.render_asset', asset_name=self.name)
+        return self.linked_template.format(url=url, mimetype=self.mimetype)
+
+    def get_linked_contents(self):
+        """ Similar to :meth:`get_linked_content`, except that all sources
+            from the asset are in their own `linked_template`. """
+        urls = []
+
+        for filename in self.sources:
+            urls.append(url_for('compressor.render_asset_source',
+                                asset_name=self.name, filename=filename))
+
+        if self.contents is not None:
+            urls.append(url_for('compressor.render_asset_contents',
+                                asset_name=self.name))
+
+        return '\n'.join(
+            [self.linked_template.format(url=url, mimetype=self.mimetype)
+             for url in urls]
+        )
 
     def load_contents_from_file(self, filename):
         """ Load the content from a file.
