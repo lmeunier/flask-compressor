@@ -293,28 +293,32 @@ class Bundle(object):
                  for content in contents]
             )
 
-    def get_linked_content(self):
+    def get_linked_content(self, concatenate=True):
         """ Return a link to the content of the bundle, the link is formatted
             with the`linked_template` template. Available placeholders for the
-            template are `url` and `mimetype`. """
-        url = url_for('compressor.render_bundle', bundle_name=self.name)
-        return self.linked_template.format(url=url, mimetype=self.mimetype)
+            template are `url` and `mimetype`.
 
-    def get_linked_contents(self):
-        """ Similar to :meth:`get_linked_content`, except that all assets
-            from the bundle are in their own `linked_template`. """
-        urls = []
+            Args:
+                concatenate: If `True`, all contents from assets are
+                    concatenated before applying the linked template. If
+                    `False`, the linked template is applied to each asset
+                    content. (default: `True`)
+        """
+        if concatenate:
+            url = url_for('compressor.render_bundle', bundle_name=self.name)
+            return self.linked_template.format(url=url, mimetype=self.mimetype)
+        else:
+            urls = []
+            for index, asset in enumerate(self.assets):
+                urls.append(url_for('compressor.render_asset',
+                                    bundle_name=self.name,
+                                    asset_index=index,
+                                    asset_name=asset.name))
 
-        for index, asset in enumerate(self.assets):
-            urls.append(url_for('compressor.render_asset',
-                                bundle_name=self.name,
-                                asset_index=index,
-                                asset_name=asset.name))
-
-        return '\n'.join(
-            [self.linked_template.format(url=url, mimetype=self.mimetype)
-             for url in urls]
-        )
+            return '\n'.join(
+                [self.linked_template.format(url=url, mimetype=self.mimetype)
+                 for url in urls]
+            )
 
 
 class CSSBundle(Bundle):
