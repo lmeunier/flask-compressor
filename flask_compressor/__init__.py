@@ -270,23 +270,28 @@ class Bundle(object):
 
         return content
 
-    def get_inline_content(self):
+    def get_inline_content(self, concatenate=True):
         """ Return the content of the bundle formatted with the
             `inline_template` template. Available placeholders for the
-            tempalte are `content` and `mimetype`. """
-        content = self.get_content()
-        return self.inline_template.format(content=content,
-                                           mimetype=self.mimetype)
+            template are `content` and `mimetype`.
 
-    def get_inline_contents(self):
-        """ Similar to :meth:`get_inline_content`, except that all assets
-            from the bundle are in their own `inline_template`. """
-        contents = self.get_contents()
-        return '\n'.join(
-            [self.inline_template.format(content=content,
-                                         mimetype=self.mimetype)
-             for content in contents]
-        )
+            Args:
+                concatenate: If `True`, all contents from assets are
+                    concatenated before applying the inline template. If
+                    `False`, the inline template is applied to each asset
+                    content. (default: `True`)
+        """
+        if concatenate:
+            content = self.get_content()
+            return self.inline_template.format(content=content,
+                                               mimetype=self.mimetype)
+        else:
+            contents = self.get_contents()
+            return '\n'.join(
+                [self.inline_template.format(content=content,
+                                             mimetype=self.mimetype)
+                 for content in contents]
+            )
 
     def get_linked_content(self):
         """ Return a link to the content of the bundle, the link is formatted

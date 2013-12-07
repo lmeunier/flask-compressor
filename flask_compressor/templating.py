@@ -28,10 +28,7 @@ def compressor(bundle_name, inline=True):
     bundle = compressor_ext.get_bundle(bundle_name)
 
     if inline:
-        if current_app.debug:
-            content = bundle.get_inline_contents()
-        else:
-            content = bundle.get_inline_content()
+        content = bundle.get_inline_content(concatenate=current_app.debug)
     else:
         if current_app.debug:
             content = bundle.get_linked_contents()
