@@ -109,11 +109,9 @@ class Compressor(object):
 
         from .processors import DEFAULT_PROCESSORS
         for processor in DEFAULT_PROCESSORS:
-            name = processor.__name__
-            self.register_processor(name, processor)
-            self._processors[name] = processor
+            self.register_processor(processor)
 
-    def register_processor(self, name, processor, replace=False):
+    def register_processor(self, processor, name=None, replace=False):
         """ Add a processor in the list of available processors.
 
         A processor is a Python function that accepts one argument (usually
@@ -121,8 +119,9 @@ class Compressor(object):
         content.
 
         Args:
-            name: the name to identify the processor, must be unique
             processor: the function used to process contents
+            name: The name to identify the processor, must be unique. If
+                `None`, use `processor.__name__`.
             replace: If `False` and a processor is already registered with the
                 same name, raises an exception. Use `True` to replace an
                 existing processor. (default `False`)
@@ -131,6 +130,9 @@ class Compressor(object):
             CompressorException: If a processor with the same name is already
                 registered.
         """
+        if name is None:
+            name = processor.__name__
+
         if name in self._processors and not replace:
             raise CompressorException("A processor named '{}' is already "
                                       "registered. Use `replace=True` to "
