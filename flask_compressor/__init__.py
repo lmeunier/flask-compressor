@@ -113,7 +113,7 @@ class Compressor(object):
             self.register_processor(name, processor)
             self._processors[name] = processor
 
-    def register_processor(self, name, processor):
+    def register_processor(self, name, processor, replace=False):
         """ Add a processor in the list of available processors.
 
         A processor is a Python function that accepts one argument (usually
@@ -123,7 +123,20 @@ class Compressor(object):
         Args:
             name: the name to identify the processor, must be unique
             processor: the function used to process contents
+            replace: If `False` and a processor is already registered with the
+                same name, raises an exception. Use `True` to replace an
+                existing processor. (default `False`)
+
+        Raises:
+            CompressorException: If a processor with the same name is already
+                registered.
         """
+        if name in self._processors and not replace:
+            raise CompressorException("A processor named '{}' is already "
+                                      "registered. Use `replace=True` to "
+                                      "replace an existing processor."
+                                      "".format(name))
+
         self._processors[name] = processor
 
     def get_processor(self, name):
