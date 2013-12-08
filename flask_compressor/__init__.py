@@ -420,7 +420,8 @@ class FileAsset(Asset):
 
         # if debug mode is enabled, reload the file on each call
         abs_path = os.path.join(current_app.static_folder, self.filename)
-        self._content = open(abs_path).read()
+        with open(abs_path) as handle:
+            self._content = handle.read()
         return self._content
 
     @property
