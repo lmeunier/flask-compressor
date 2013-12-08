@@ -204,29 +204,19 @@ class Bundle(object):
         self.linked_template = linked_template or self.default_linked_template
         self.mimetype = mimetype or self.default_mimetype
 
-    def apply_processors(self, data):
+    def apply_processors(self, contents):
         """ Apply all processors to the provided data.
 
         Args:
-            data: can be either a string or a list of strings
+            data: a list of strings
 
         Returns:
-            Modified data with all processors applied. Returns the same
-            type as `data` (a string or a list of strings).
+            A list of modified strings with all processors applied.
         """
-        contents = data
-
-        if isinstance(data, basestring):
-            contents = [data]
-
-        # apply all processors
         compressor = current_app.extensions['compressor']
         for name in self.processors:
             processor = compressor.get_processor(name)
             contents = [processor(content) for content in contents]
-
-        if isinstance(data, basestring):
-            return contents[0]
 
         return contents
 
@@ -266,7 +256,7 @@ class Bundle(object):
 
         # apply processors
         if apply_processors:
-            content = self.apply_processors(content)
+            content = self.apply_processors([content])[0]
 
         return content
 
