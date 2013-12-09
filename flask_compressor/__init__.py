@@ -70,7 +70,7 @@ class Compressor(object):
                 same name, raises an exception. Use `True` to replace an
                 existing bundle. (default `False`)
 
-        Raise:
+        Raises:
             CompressorException: If a bundle with the same name is already
                 registered.
         """
