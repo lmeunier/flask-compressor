@@ -27,13 +27,13 @@ def compressor(bundle_name, inline=True):
     compressor_ext = current_app.extensions['compressor']
     bundle = compressor_ext.get_bundle(bundle_name)
 
+    # should assets in the bunble be concatenated into one big asset
+    should_concatenate = not current_app.debug
+
     if inline:
-        content = bundle.get_inline_content(concatenate=current_app.debug)
+        content = bundle.get_inline_content(concatenate=should_concatenate)
     else:
-        if current_app.debug:
-            content = bundle.get_linked_contents()
-        else:
-            content = bundle.get_linked_content()
+        content = bundle.get_linked_content(concatenate=should_concatenate)
 
     # mark the string as safe, so HTML tags won't be escaped
     return Markup(content)
