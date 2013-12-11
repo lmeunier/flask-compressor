@@ -17,7 +17,7 @@ Requirements
 - scripts or Python modules to process your assets
 
 This extension is not a rewrite of famous web assets processors (like
-`CoffeeScript <http://coffeescript.org/>`_ or `Sass <http://sass-lang.com>`_).
+`CoffeeScript <http://coffeescript.org/>`_ or `LESS <http://lesscss.org>`_).
 You must install dependencies required for each processor you want to use.
 
 Installation
@@ -83,7 +83,7 @@ application to build the full path to the file.
 
     from flask.ext.compressor import FileAsset
 
-    my_asset = FileAsset(filename='css/styles.sass', processors=['sass'])
+    my_asset = FileAsset(filename='css/styles.less', processors=['lesscss'])
 
 If debug is enabled (`current_app.debug == True`), the file is re-read each
 time the content of the asset is accessed. If debug is disabled, the file is
@@ -118,7 +118,8 @@ the `processors` argument.
 Available processors
 --------------------
 
-Flask-Compressor is shipped with one processor. More processors will be added.
+Flask-Compressor is shipped with only two processors. More processors will be
+added soon.
 
 
 cssmin
@@ -131,6 +132,17 @@ compression algorithm. To use it, you must install the `cssmin` Python package.
 
     pip install cssmin
 
+lesscss
+~~~~~~~
+
+Use the `lessc` command from `lesscss <http://lesscss.org/>`_ to compile LESS
+code into regular CSS content. You need to have the `lessc` command available.
+If you already have `node.js <http://nodejs.org>`_ and `npm
+<https://npmjs.org>`_ installed, you can install `lessc` with one command line:
+
+  ::
+
+    npm install -g less
 
 
 Bundle templates
@@ -201,7 +213,7 @@ Full example
         name='css_bundle',
         assets=[
             Asset(content=pygments_style_defs()),
-            FileAsset(filename='styles.sass', processors=['sass']),
+            FileAsset(filename='styles.less', processors=['lesscss']),
         ],
         processors=['cssmin']
     )
@@ -210,9 +222,10 @@ Full example
 What does this example? We have created a CSS bundle with two assets. The
 content of the first asset comes from the `FlatPages extension
 <http://pythonhosted.org/Flask-FlatPages/>`_: CSS styles for pygments
-highlight. The second asset is a SASS file with a processor to compile the file
-content into regular CSS properties. And finally, contents from the two assets
-are concatenated and minified.
+highlight. The second asset is a `LESS <http://lesscss.org/>`_ file with a
+processor to compile the file content into regular CSS properties. And finally,
+contents from the two assets are concatenated and minified using the `cssmin`
+processor.
 
 
 Credits

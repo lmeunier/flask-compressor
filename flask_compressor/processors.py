@@ -6,6 +6,7 @@
 
 from __future__ import unicode_literals, absolute_import, division, \
     print_function
+import subprocess
 from flask import current_app
 from . import CompressorException
 
@@ -46,5 +47,45 @@ def cssmin(content):
     return cssmin_processor(content)
 
 
+def lesscss(content):
+    """ Compile your LESS code to CSS.
+
+    Use the `lessc` command to compile LESS code to regular CSS content. The
+    `lessc` command is not installed with Flask-Compressor, you need to install
+    it separatly. Go to the `homepage of LESS <http://lesscss.org>`_ for
+    installation instructions.
+
+    If you already have `node.js <http://nodejs.org>`_ and `npm
+    <https://npmjs.org>`_ installed, you can install `lessc` with this command
+    line:
+
+        npm install -g less
+
+    Args:
+        content: your LESS content
+
+    Returns:
+        the LESS content compiled to regular CSS content
+    """
+    try:
+        process = subprocess.Popen(
+            ['lessc', '--no-color', '-'],
+            stdin=subprocess.PIPE,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE
+        )
+    except OSError as e:
+        # error when invoking the lessc command
+        raise CompressorProcessorException("Error when invoking the 'lessc' "
+                                           "command: " + e.strerror)
+
+    stdout, stderr = process.communicate(input=content)
+
+    if process.wait() != 0:
+        raise CompressorProcessorException("Error with 'lesscss': " + stderr)
+
+    return stdout
+
+
 # processors that should be registered for every app
-DEFAULT_PROCESSORS = [cssmin]
+DEFAULT_PROCESSORS = [cssmin, lesscss]
