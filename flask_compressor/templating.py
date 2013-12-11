@@ -11,18 +11,18 @@ from flask import current_app
 
 
 def compressor(bundle_name, inline=True):
-    """ Returns the processed content of an asset.
+    """ Returns the processed content of a bundle.
 
-            {{ compressor('asset_name') }}
+            {{ compressor('bundle_name') }}
 
         Args:
-            asset_name: the name of the asset
-            inline: If `True`, the asset's content is added directly in the
-                output. If `False`, the asset's content is linked to a
+            bundle_name: the name of the bundle
+            inline: If `True`, the bundle content is added directly in the
+                output. If `False`, the bundle content is linked to a
                 downloadable ressource. (default: `True`)
 
         Returns:
-            the processed content of an asset
+            the processed content of the bundle
     """
     compressor_ext = current_app.extensions['compressor']
     bundle = compressor_ext.get_bundle(bundle_name)
