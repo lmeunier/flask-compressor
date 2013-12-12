@@ -14,10 +14,10 @@ blueprint = Blueprint('compressor', __name__)
 
 @blueprint.route('/bundle/<bundle_name>')
 def render_bundle(bundle_name):
-    """ Render the complete asset content.
+    """ Render the complete bundle content.
 
     Args:
-        asset_name: name of the asset to render
+        bundle_name: name of the bundle to render
     """
     compressor = current_app.extensions['compressor']
     bundle = compressor.get_bundle(bundle_name)
