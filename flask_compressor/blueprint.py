@@ -20,7 +20,13 @@ def render_bundle(bundle_name):
         bundle_name: name of the bundle to render
     """
     compressor = current_app.extensions['compressor']
-    bundle = compressor.get_bundle(bundle_name)
+
+    from . import CompressorException
+    try:
+        bundle = compressor.get_bundle(bundle_name)
+    except CompressorException:
+        abort(404)
+
     content = bundle.get_content()
     return Response(content, mimetype=bundle.mimetype)
 
@@ -38,7 +44,12 @@ def render_asset(bundle_name, asset_index, asset_name):
             found in the asset, returns a 404 error.
     """
     compressor = current_app.extensions['compressor']
-    bundle = compressor.get_bundle(bundle_name)
+
+    from . import CompressorException
+    try:
+        bundle = compressor.get_bundle(bundle_name)
+    except CompressorException:
+        abort(404)
 
     try:
         asset = bundle.assets[asset_index]
