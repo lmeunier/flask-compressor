@@ -320,6 +320,12 @@ class FileAssetTestCase(AssetTestCase):
         os.remove(os.path.join(self.static_folder, self.filename))
         os.removedirs(self.static_folder)
 
+    def test_absolute_filename(self):
+        with self.assertRaises(CompressorException) as cm:
+            FileAsset('/tmp/foobar')
+
+        self.assertIn('Absolute filename are not supported', str(cm.exception))
+
     def test_blueprint_urls(self):
         get = self.app.test_client().get
 

@@ -396,6 +396,11 @@ class FileAsset(Asset):
                 `filename` is a path relative to the static folder of the
                 Flask application
         """
+        if os.path.isabs(filename):
+            raise CompressorException("Absolute filename are not supported: "
+                                      "{}. Use a relative path from the static"
+                                      "folder of your Flask app."
+                                      "".format(filename))
         self.filename = filename
         super(FileAsset, self).__init__(None, *args, **kwargs)
 
