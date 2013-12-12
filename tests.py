@@ -260,6 +260,7 @@ class BundleWithAssetsTestCase(unittest.TestCase):
         rv = get('/_compressor/bundle/bundle_not_found/asset/0/')
         self.assertEqual(rv.status_code, 404)
 
+
 class AssetTestCase(unittest.TestCase):
     def setUp(self):
         # initialize the flask app
@@ -276,6 +277,7 @@ class AssetTestCase(unittest.TestCase):
         '''
         self.asset_processors = ['cssmin']
         self.asset = Asset(self.css_content, self.asset_processors)
+        self.result_asset_content = 'html{background-color:red}'
 
     def test_raw_content(self):
         with self.app.test_request_context():
@@ -283,23 +285,49 @@ class AssetTestCase(unittest.TestCase):
 
     def test_content(self):
         with self.app.test_request_context():
-            self.assertEqual(self.asset.content, 'html{background-color:red}')
+            self.assertEqual(self.result_asset_content, self.asset.content)
 
 
 class FileAssetTestCase(AssetTestCase):
     def setUp(self):
         super(FileAssetTestCase, self).setUp()
 
+        # create a temporary folder used as the 'static' folder of the Flask
+        # application
+        static_folder = tempfile.mkdtemp()
+        self.static_folder = static_folder
+
+        # initialize the flask app
+        app = flask.Flask(__name__, static_folder=static_folder)
+        app.config['TESTING'] = True
+        compressor = Compressor(app)
+        self.app = app
+        self.compressor = compressor
+
         # create a temporary file
-        fd, filename = tempfile.mkstemp()
+        fd, filename = tempfile.mkstemp(dir=static_folder)
         os.write(fd, self.css_content.encode('utf-8'))
         os.close(fd)
+        self.filename = os.path.basename(filename)
 
         # create a FileAsset object
-        self.asset = FileAsset(filename, self.asset_processors)
+        self.asset = FileAsset(self.filename, self.asset_processors)
+
+        bundle = Bundle(name='test_bundle', assets=[self.asset])
+        self.compressor.register_bundle(bundle)
 
     def tearDown(self):
-        os.remove(self.asset.filename)
+        os.remove(os.path.join(self.static_folder, self.filename))
+        os.removedirs(self.static_folder)
+
+    def test_blueprint_urls(self):
+        get = self.app.test_client().get
+
+        rv = get('/_compressor/bundle/test_bundle/asset/0/not_found.css')
+        self.assertEqual(rv.status_code, 404)
+
+        rv = get('/_compressor/bundle/test_bundle/asset/0/' + self.filename)
+        self.assertEqual(self.result_asset_content, rv.data.decode('utf8'))
 
 
 class MultipleProcessorsTestCase(unittest.TestCase):
