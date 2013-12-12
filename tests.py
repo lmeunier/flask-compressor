@@ -187,6 +187,8 @@ class BundleWithAssetsTestCase(unittest.TestCase):
         )
         self.bundle = bundle
 
+        compressor.register_bundle(bundle)
+
     def test_get_content(self):
         bundle_content = 'FOOBARfirst asset\nsecond assetBARFOO'
         with self.app.test_request_context():
@@ -234,6 +236,29 @@ class BundleWithAssetsTestCase(unittest.TestCase):
             contents = self.bundle.get_linked_content(concatenate=False)
             self.assertEqual(contents, linked_content)
 
+    def test_blueprint_urls(self):
+        get = self.app.test_client().get
+
+        rv = get('/_compressor/bundle/test_bundle')
+        self.assertEqual('FOOBARfirst asset\nsecond assetBARFOO', rv.data.decode('utf8'))
+
+        rv = get('/_compressor/bundle/bundle_not_found')
+        self.assertEqual(rv.status_code, 404)
+
+        rv = get('/_compressor/bundle/test_bundle/asset/0/')
+        self.assertEqual('FOOBARfirst asset', rv.data.decode('utf8'))
+
+        rv = get('/_compressor/bundle/test_bundle/asset/1/')
+        self.assertEqual('second asset', rv.data.decode('utf8'))
+
+        rv = get('/_compressor/bundle/test_bundle/asset/2/')
+        self.assertEqual(rv.status_code, 404)
+
+        rv = get('/_compressor/bundle/test_bundle/asset/1/not_found.css')
+        self.assertEqual(rv.status_code, 404)
+
+        rv = get('/_compressor/bundle/bundle_not_found/asset/0/')
+        self.assertEqual(rv.status_code, 404)
 
 class AssetTestCase(unittest.TestCase):
     def setUp(self):
