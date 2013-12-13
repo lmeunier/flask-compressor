@@ -345,7 +345,8 @@ class Asset(object):
             processors: a list a processor registered in the
                 :class:`Compressor` extension (default: `[]`)
         """
-        self._content = content
+        self._cached_content = None
+        self._cached_raw_content = content
         self.processors = processors or []
 
     def apply_processors(self, content):
@@ -369,7 +370,14 @@ class Asset(object):
     def content(self):
         """ Return the content of the asset after being altered by the
         processors. """
-        return self.apply_processors(self.raw_content)
+
+        # do not re-compute asset content when debug mode is disabled and the
+        # content has already been processed
+        if not current_app.debug and self._cached_content is not None:
+            return self._cached_content
+
+        self._cached_content = self.apply_processors(self.raw_content)
+        return self._cached_content
 
     @property
     def name(self):
@@ -379,7 +387,7 @@ class Asset(object):
     @property
     def raw_content(self):
         """ Return the raw content of the asset, without any modification. """
-        return self._content
+        return self._cached_raw_content
 
 
 class FileAsset(Asset):
@@ -410,14 +418,14 @@ class FileAsset(Asset):
 
         # do not reload file on each call if app is not in debug mode and the
         # file is already loaded
-        if not current_app.debug and self._content is not None:
-            return self._content
+        if not current_app.debug and self._cached_raw_content is not None:
+            return self._cached_raw_content
 
         # if debug mode is enabled, reload the file on each call
         abs_path = os.path.join(current_app.static_folder, self.filename)
         with open(abs_path) as handle:
-            self._content = handle.read()
-        return self._content
+            self._cached_raw_content = handle.read()
+        return self._cached_raw_content
 
     @property
     def name(self):
