@@ -8,6 +8,13 @@ Flask-Compressor is a `Flask <http://flask.pocoo.org>`_ extension that helps
 you to manage your web assets. For example, Flask-Compressor will concatenate
 and minify all your CSS files, or compile CoffeScript files into JavaScript.
 
+The main difference between Flask-Compressor and other extensions doing the
+same thing is that Flask-Compressor will never write the final result of an
+asset on the file system, all results are kept in memory and served directly
+from memory. This behavior can help deployement when the user running the Flask
+application don't have the right to write on the local file system (this is the
+case with Google App Engine).
+
 
 Requirements
 ------------
