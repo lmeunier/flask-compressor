@@ -1,6 +1,9 @@
 Flask-Compressor
 ================
 
+.. image:: https://travis-ci.org/lmeunier/flask-compressor.png?branch=master
+   :target: https://travis-ci.org/lmeunier/flask-compressor
+
 Overview
 --------
 
