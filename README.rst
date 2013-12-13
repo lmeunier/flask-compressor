@@ -165,7 +165,8 @@ Available placeholders are:
 - `inline_template`: `{content}` and `{mimetype}`
 - `linked_template`: `{url}` and `{mimetype}`
 
-For example, if you want to create a bundle and use it with CSS files, you can do something like this:
+For example, if you want to create a bundle and use it with CSS files, you can
+do something like this:
 
   ::
 
@@ -173,7 +174,8 @@ For example, if you want to create a bundle and use it with CSS files, you can d
         name='my_bundle',
         assets=[Asset('/* some CSS properties */')],
         inline_template='<style type="{mimetype}">{content}</style>',
-        linked_template='<link type="{mimetype}" rel="stylesheet" href="{url}">'
+        linked_template='<link type="{mimetype}" rel="stylesheet" href="{url}">',
+        mimetype='text/css'
     )
 
 You can now render your bundle in your template, and either add the content
@@ -189,7 +191,7 @@ templates (inline and linked) and the mimetype:
 Render bundles in templates
 ---------------------------
 
-A new function `compressor` is added the Jinja2 environment. The
+A new function `compressor` is added to the Jinja2 environment. The
 `compressor` function render the content of a bundle. You can either render the
 bundle inline (the content of the bundle is added to the output - this is the
 default behavior), or linked.
