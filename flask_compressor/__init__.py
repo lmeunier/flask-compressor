@@ -12,9 +12,48 @@
 from __future__ import unicode_literals, absolute_import, division, \
     print_function
 import os
+import functools
 from flask import current_app, url_for
 from .blueprint import blueprint as compressor_blueprint
 from .templating import compressor as compressor_template_helper
+
+
+class memoized(object):
+    """ Decorator. Caches a function or method return value only if the current
+    Flask application is *not* in debug mode. """
+
+    def __init__(self, func):
+        """ Initialize the decorator with a function (or method) """
+        self.func = func
+        self.cache = {}
+
+    def __call__(self, *args, **kwargs):
+        """ Call the decorated function (or method) if the Flask application is
+        not in debug mode, or the return value is not yet cached. """
+        if current_app.debug:
+            # always reevaluate the return value when debug is enabled
+            return self.func(*args, **kwargs)
+
+        # compute the key to store the retur value in a dict
+        key = (args, frozenset(kwargs.items()))
+
+        if key in self.cache:
+            # the return value is already evaluated, return it
+            return self.cache[key]
+
+        # evaluate the return value (call the decorated function)
+        value = self.func(*args, **kwargs)
+
+        # store and return the return value
+        self.cache[key] = value
+        return value
+
+    def __repr__(self):
+        """ Return a representation of the decorated function (or method) """
+        return "<Memoized function '{}'>".format(self.func.__name__)
+
+    def __get__(self, obj, objtype):
+        return functools.partial(self.__call__, obj)
 
 
 class CompressorException(Exception):
