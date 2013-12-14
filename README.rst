@@ -37,7 +37,7 @@ Installation
 
 - from Git:
 
-  ::
+.. code:: bash
 
     git clone https://github.com/lmeunier/flask-compressor
     cd flask-compressor
@@ -47,7 +47,7 @@ Installation
 Initialize the Flask-Compressor extension
 -----------------------------------------
 
-  ::
+.. code:: python
 
     from flask import Flask
     from flask.ext.compressor import Compressor
@@ -69,7 +69,7 @@ An asset is the equivalent of an external resource like a JavaScript or a CSS
 file. You create an asset by instantiating an `Asset` object with content and
 processors.
 
-  ::
+.. code:: python
 
     from flask.ext.compressor import Asset
 
@@ -89,7 +89,7 @@ An helper named `FileAsset` is available to load the content from a file. The
 `filename` argument is appended to the static folder path of the Flask
 application to build the full path to the file.
 
-  ::
+.. code:: python
 
     from flask.ext.compressor import FileAsset
 
@@ -108,7 +108,7 @@ A bundle is a collection of assets. A bundle is identified by a name and must
 be registered with the Flask-Compressor extension. You can create a bundle by
 instantiating a `Bundle` object with assets and processors.
 
-  ::
+.. code:: python
 
     from flask.ext.compressor import Bundle
 
@@ -138,7 +138,7 @@ cssmin
 `cssmin <https://pypi.python.org/pypi/cssmin>`_ is a Python port of the YUI CSS
 compression algorithm. To use it, you must install the `cssmin` Python package.
 
-  ::
+.. code:: bash
 
     pip install cssmin
 
@@ -150,7 +150,7 @@ code into regular CSS content. You need to have the `lessc` command available.
 If you already have `node.js <http://nodejs.org>`_ and `npm
 <https://npmjs.org>`_ installed, you can install `lessc` with one command line:
 
-  ::
+.. code:: bash
 
     npm install -g less
 
@@ -171,7 +171,7 @@ Available placeholders are:
 For example, if you want to create a bundle and use it with CSS files, you can
 do something like this:
 
-  ::
+.. code:: python
 
     my_bundle = Bundle(
         name='my_bundle',
@@ -199,7 +199,7 @@ A new function `compressor` is added to the Jinja2 environment. The
 bundle inline (the content of the bundle is added to the output - this is the
 default behavior), or linked.
 
-  ::
+.. code:: HTML+Django
 
     {{ compressor('name_for_my_bundle', inline=True) }}
 
@@ -212,7 +212,7 @@ the `inline_template` of the bundle is used. When `inline` is `False`, the
 Full example
 ------------
 
-  ::
+.. code:: python
 
     from flask import Flask
     from flask.ext.flatpages import pygments_style_defs
