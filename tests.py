@@ -260,6 +260,12 @@ class BundleWithAssetsTestCase(unittest.TestCase):
         rv = get('/_compressor/bundle/bundle_not_found/asset/0/')
         self.assertEqual(rv.status_code, 404)
 
+    def test_cached_bundle_content(self):
+        with self.app.test_request_context():
+            evaluated_content = self.bundle.get_content()
+            cached_content = self.bundle.get_content()
+            self.assertEqual(evaluated_content, cached_content)
+
 
 class AssetTestCase(unittest.TestCase):
     def setUp(self):

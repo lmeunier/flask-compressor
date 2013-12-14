@@ -259,6 +259,7 @@ class Bundle(object):
 
         return contents
 
+    @memoized
     def get_contents(self, apply_processors=True):
         """ Returns a list with the content of each assets.
 
@@ -281,6 +282,7 @@ class Bundle(object):
 
         return contents
 
+    @memoized
     def get_content(self, apply_processors=True):
         """ Concatenate the content from each assets in a single string.
 
@@ -299,6 +301,7 @@ class Bundle(object):
 
         return content
 
+    @memoized
     def get_inline_content(self, concatenate=True):
         """ Return the content of the bundle formatted with the
             `inline_template` template. Available placeholders for the
@@ -322,6 +325,7 @@ class Bundle(object):
                  for content in contents]
             )
 
+    @memoized
     def get_linked_content(self, concatenate=True):
         """ Return a link to the content of the bundle, the link is formatted
             with the`linked_template` template. Available placeholders for the
