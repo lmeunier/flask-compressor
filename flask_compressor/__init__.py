@@ -53,6 +53,7 @@ class memoized(object):
         return "<Memoized function '{}'>".format(self.func.__name__)
 
     def __get__(self, obj, objtype):
+        """ Support instance method """
         return functools.partial(self.__call__, obj)
 
 
@@ -459,4 +460,5 @@ class FileAsset(Asset):
 
     @property
     def name(self):
+        """ The asset is identified by the filename """
         return self.filename
