@@ -367,7 +367,7 @@ class JSBundle(Bundle):
     """ A helper class to use a :class:`Bundle` objects with Javascript assets.
     """
     default_inline_template = '<script type="{mimetype}">{content}</script>'
-    default_linked_tempalte = '<script type="{mimetype}" src="{url}">' \
+    default_linked_template = '<script type="{mimetype}" src="{url}">' \
                               '</script>'
     default_mimetype = 'text/javascript'
 
