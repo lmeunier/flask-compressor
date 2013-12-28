@@ -13,7 +13,7 @@ import unittest
 import flask
 import tempfile
 from flask.ext.compressor import Compressor, Bundle, Asset, FileAsset, \
-    CompressorException, JSBundle
+    CompressorException, JSBundle, CSSBundle
 from flask.ext.compressor.processors import DEFAULT_PROCESSORS
 
 
@@ -432,6 +432,55 @@ class JSBundleTestCase(unittest.TestCase):
             'src="/_compressor/bundle/test_bundle/asset/0/"></script>\n' \
             '<script type="text/javascript" ' \
             'src="/_compressor/bundle/test_bundle/asset/1/"></script>'
+        with self.app.test_request_context():
+            contents = self.bundle.get_linked_content(concatenate=False)
+            self.assertEqual(contents, linked_content)
+
+
+class CSSBundleTestCase(unittest.TestCase):
+    def setUp(self):
+        # initialize the flask app
+        app = flask.Flask(__name__)
+        app.config['TESTING'] = True
+        compressor = Compressor(app)
+        self.app = app
+        self.compressor = compressor
+
+        # our bundle
+        bundle = CSSBundle(
+            name='test_bundle',
+            assets=[
+                Asset(content='first asset'),
+                Asset(content='second asset'),
+            ],
+        )
+        self.bundle = bundle
+
+        compressor.register_bundle(bundle)
+
+    def test_get_inline_content(self):
+        inline_content = '<style type="text/css">first asset\nsecond asset</style>'
+        with self.app.test_request_context():
+            content = self.bundle.get_inline_content()
+            self.assertEqual(content, inline_content)
+
+        inline_content = '<style type="text/css">first asset</style>\n' \
+            '<style type="text/css">second asset</style>'
+        with self.app.test_request_context():
+            contents = self.bundle.get_inline_content(concatenate=False)
+            self.assertEqual(contents, inline_content)
+
+    def test_get_linked_content(self):
+        linked_content = '<link type="text/css" rel="stylesheet" ' \
+            'href="/_compressor/bundle/test_bundle">'
+        with self.app.test_request_context():
+            content = self.bundle.get_linked_content()
+            self.assertEqual(content, linked_content)
+
+        linked_content = '<link type="text/css" rel="stylesheet" ' \
+            'href="/_compressor/bundle/test_bundle/asset/0/">\n' \
+            '<link type="text/css" rel="stylesheet" ' \
+            'href="/_compressor/bundle/test_bundle/asset/1/">'
         with self.app.test_request_context():
             contents = self.bundle.get_linked_content(concatenate=False)
             self.assertEqual(contents, linked_content)
