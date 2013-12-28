@@ -223,15 +223,15 @@ class BundleWithAssetsTestCase(unittest.TestCase):
             self.assertEqual(contents, inline_content)
 
     def test_get_linked_content(self):
-        linked_content = "<link ref='external' href='/_compressor/bundle/tes" \
-            "t_bundle' type='text/plain'>"
+        linked_content = '<link ref="external" href="/_compressor/bundle/tes' \
+            't_bundle" type="text/plain">'
         with self.app.test_request_context():
             content = self.bundle.get_linked_content()
             self.assertEqual(content, linked_content)
 
-        linked_content = "<link ref='external' href='/_compressor/bundle/tes" \
-            "t_bundle/asset/0/' type='text/plain'>\n<link ref='external' hre" \
-            "f='/_compressor/bundle/test_bundle/asset/1/' type='text/plain'>"
+        linked_content = '<link ref="external" href="/_compressor/bundle/tes' \
+            't_bundle/asset/0/" type="text/plain">\n<link ref="external" hre' \
+            'f="/_compressor/bundle/test_bundle/asset/1/" type="text/plain">'
         with self.app.test_request_context():
             contents = self.bundle.get_linked_content(concatenate=False)
             self.assertEqual(contents, linked_content)

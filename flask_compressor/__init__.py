@@ -210,10 +210,10 @@ class Bundle(object):
         is called to alter the content of the concatenation of all assets in
         the bundle.
     """
-    default_inline_template = "{content}"
-    default_linked_template = "<link ref='external' href='{url}' "\
-                              "type='{mimetype}'>"
-    default_mimetype = "text/plain"
+    default_inline_template = '{content}'
+    default_linked_template = '<link ref="external" href="{url}" '\
+                              'type="{mimetype}">'
+    default_mimetype = 'text/plain'
 
     def __init__(self, name, assets=None, processors=None,
                  inline_template=None, linked_template=None, mimetype=None):
