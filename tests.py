@@ -13,7 +13,7 @@ import unittest
 import flask
 import tempfile
 from flask.ext.compressor import Compressor, Bundle, Asset, FileAsset, \
-    CompressorException
+    CompressorException, JSBundle
 from flask.ext.compressor.processors import DEFAULT_PROCESSORS
 
 
@@ -386,6 +386,55 @@ class MultipleProcessorsTestCase(unittest.TestCase):
         bundle_content = 'p{background-color:blue}body{background-color:blue}'
         with self.app.test_request_context():
             self.assertEqual(bundle_content, self.bundle.get_content())
+
+
+class JSBundleTestCase(unittest.TestCase):
+    def setUp(self):
+        # initialize the flask app
+        app = flask.Flask(__name__)
+        app.config['TESTING'] = True
+        compressor = Compressor(app)
+        self.app = app
+        self.compressor = compressor
+
+        # our bundle
+        bundle = JSBundle(
+            name='test_bundle',
+            assets=[
+                Asset(content='first asset'),
+                Asset(content='second asset'),
+            ],
+        )
+        self.bundle = bundle
+
+        compressor.register_bundle(bundle)
+
+    def test_get_inline_content(self):
+        inline_content = '<script type="text/javascript">first asset\nsecond asset</script>'
+        with self.app.test_request_context():
+            content = self.bundle.get_inline_content()
+            self.assertEqual(content, inline_content)
+
+        inline_content = '<script type="text/javascript">first asset</script>\n' \
+            '<script type="text/javascript">second asset</script>'
+        with self.app.test_request_context():
+            contents = self.bundle.get_inline_content(concatenate=False)
+            self.assertEqual(contents, inline_content)
+
+    def test_get_linked_content(self):
+        linked_content = '<script type="text/javascript" ' \
+            'src="/_compressor/bundle/test_bundle"></script>'
+        with self.app.test_request_context():
+            content = self.bundle.get_linked_content()
+            self.assertEqual(content, linked_content)
+
+        linked_content = '<script type="text/javascript" ' \
+            'src="/_compressor/bundle/test_bundle/asset/0/"></script>\n' \
+            '<script type="text/javascript" ' \
+            'src="/_compressor/bundle/test_bundle/asset/1/"></script>'
+        with self.app.test_request_context():
+            contents = self.bundle.get_linked_content(concatenate=False)
+            self.assertEqual(contents, linked_content)
 
 
 if __name__ == '__main__':
