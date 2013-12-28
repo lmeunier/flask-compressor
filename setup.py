@@ -14,11 +14,12 @@ from setuptools import setup
 
 setup(
     name='Flask-Compressor',
-    version='0.1.0',
+    version='0.1.1',
     description='Compress your CSS and JS files.',
     long_description=__doc__,
     author='Laurent Meunier',
     author_email='laurent@deltalima.net',
+    url='https://github.com/lmeunier/flask-compressor',
     packages=['flask_compressor'],
     include_package_data=True,
     zip_safe=False,
