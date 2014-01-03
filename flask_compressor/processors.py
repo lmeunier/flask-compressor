@@ -87,5 +87,35 @@ def lesscss(content):
     return stdout
 
 
+def jsmin(content):
+    """ Minify your JavaScript code.
+
+    Use `jsmin <https://pypi.python.org/pypi/jsmin>`_ to compress JavaScript.
+    You must manually install jsmin if you want to use this processor.
+
+    Args:
+        content: your JavaScript code
+
+    Returns:
+        the minified version of your JavaScript code, or the original content
+        if the Flask application is in Debug mode
+
+    Raises:
+        CompressorProcessorException: if jsmin is not installed.
+    """
+    try:
+        from jsmin import jsmin as jsmin_processor
+    except ImportError:
+        raise CompressorProcessorException("'jsmin' is not installed. Please"
+                                           " install it if you want to use "
+                                           "the 'jsmin' processor.")
+
+    if current_app.debug is True:
+        # do not minify
+        return content
+
+    return jsmin_processor(content)
+
+
 # processors that should be registered for every app
-DEFAULT_PROCESSORS = [cssmin, lesscss]
+DEFAULT_PROCESSORS = [cssmin, lesscss, jsmin]
