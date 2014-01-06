@@ -224,14 +224,15 @@ class BundleWithAssetsTestCase(unittest.TestCase):
 
     def test_get_linked_content(self):
         linked_content = '<link ref="external" href="/_compressor/bundle/tes' \
-            't_bundle" type="text/plain">'
+            't_bundle.txt" type="text/plain">'
         with self.app.test_request_context():
             content = self.bundle.get_linked_content()
             self.assertEqual(content, linked_content)
 
         linked_content = '<link ref="external" href="/_compressor/bundle/tes' \
-            't_bundle/asset/0/" type="text/plain">\n<link ref="external" hre' \
-            'f="/_compressor/bundle/test_bundle/asset/1/" type="text/plain">'
+            't_bundle/asset/0.txt" type="text/plain">\n<link ref="external" ' \
+            'href="/_compressor/bundle/test_bundle/asset/1.txt" type="text/p' \
+            'lain">'
         with self.app.test_request_context():
             contents = self.bundle.get_linked_content(concatenate=False)
             self.assertEqual(contents, linked_content)
@@ -239,25 +240,26 @@ class BundleWithAssetsTestCase(unittest.TestCase):
     def test_blueprint_urls(self):
         get = self.app.test_client().get
 
-        rv = get('/_compressor/bundle/test_bundle')
-        self.assertEqual('FOOBARfirst asset\nsecond assetBARFOO', rv.data.decode('utf8'))
+        rv = get('/_compressor/bundle/test_bundle.txt')
+        self.assertEqual('FOOBARfirst asset\nsecond assetBARFOO',
+                         rv.data.decode('utf8'))
 
         rv = get('/_compressor/bundle/bundle_not_found')
         self.assertEqual(rv.status_code, 404)
 
-        rv = get('/_compressor/bundle/test_bundle/asset/0/')
+        rv = get('/_compressor/bundle/test_bundle/asset/0.txt')
         self.assertEqual('FOOBARfirst asset', rv.data.decode('utf8'))
 
-        rv = get('/_compressor/bundle/test_bundle/asset/1/')
+        rv = get('/_compressor/bundle/test_bundle/asset/0.css')
+        self.assertEqual(rv.status_code, 404)
+
+        rv = get('/_compressor/bundle/test_bundle/asset/1.txt')
         self.assertEqual('second asset', rv.data.decode('utf8'))
 
-        rv = get('/_compressor/bundle/test_bundle/asset/2/')
+        rv = get('/_compressor/bundle/test_bundle/asset/2.txt')
         self.assertEqual(rv.status_code, 404)
 
-        rv = get('/_compressor/bundle/test_bundle/asset/1/not_found.css')
-        self.assertEqual(rv.status_code, 404)
-
-        rv = get('/_compressor/bundle/bundle_not_found/asset/0/')
+        rv = get('/_compressor/bundle/bundle_not_found/asset/0.txt')
         self.assertEqual(rv.status_code, 404)
 
     def test_cached_bundle_content(self):
@@ -334,11 +336,7 @@ class FileAssetTestCase(AssetTestCase):
 
     def test_blueprint_urls(self):
         get = self.app.test_client().get
-
-        rv = get('/_compressor/bundle/test_bundle/asset/0/not_found.css')
-        self.assertEqual(rv.status_code, 404)
-
-        rv = get('/_compressor/bundle/test_bundle/asset/0/' + self.filename)
+        rv = get('/_compressor/bundle/test_bundle/asset/0.txt')
         self.assertEqual(self.result_asset_content, rv.data.decode('utf8'))
 
 
@@ -423,15 +421,15 @@ class JSBundleTestCase(unittest.TestCase):
 
     def test_get_linked_content(self):
         linked_content = '<script type="text/javascript" ' \
-            'src="/_compressor/bundle/test_bundle"></script>'
+            'src="/_compressor/bundle/test_bundle.js"></script>'
         with self.app.test_request_context():
             content = self.bundle.get_linked_content()
             self.assertEqual(content, linked_content)
 
         linked_content = '<script type="text/javascript" ' \
-            'src="/_compressor/bundle/test_bundle/asset/0/"></script>\n' \
+            'src="/_compressor/bundle/test_bundle/asset/0.js"></script>\n' \
             '<script type="text/javascript" ' \
-            'src="/_compressor/bundle/test_bundle/asset/1/"></script>'
+            'src="/_compressor/bundle/test_bundle/asset/1.js"></script>'
         with self.app.test_request_context():
             contents = self.bundle.get_linked_content(concatenate=False)
             self.assertEqual(contents, linked_content)
@@ -472,15 +470,15 @@ class CSSBundleTestCase(unittest.TestCase):
 
     def test_get_linked_content(self):
         linked_content = '<link type="text/css" rel="stylesheet" ' \
-            'href="/_compressor/bundle/test_bundle">'
+            'href="/_compressor/bundle/test_bundle.css">'
         with self.app.test_request_context():
             content = self.bundle.get_linked_content()
             self.assertEqual(content, linked_content)
 
         linked_content = '<link type="text/css" rel="stylesheet" ' \
-            'href="/_compressor/bundle/test_bundle/asset/0/">\n' \
+            'href="/_compressor/bundle/test_bundle/asset/0.css">\n' \
             '<link type="text/css" rel="stylesheet" ' \
-            'href="/_compressor/bundle/test_bundle/asset/1/">'
+            'href="/_compressor/bundle/test_bundle/asset/1.css">'
         with self.app.test_request_context():
             contents = self.bundle.get_linked_content(concatenate=False)
             self.assertEqual(contents, linked_content)

@@ -12,12 +12,13 @@ from flask import Blueprint, current_app, abort, Response
 blueprint = Blueprint('compressor', __name__)
 
 
-@blueprint.route('/bundle/<bundle_name>')
-def render_bundle(bundle_name):
+@blueprint.route('/bundle/<bundle_name>.<extension>')
+def render_bundle(bundle_name, extension):
     """ Render the complete bundle content.
 
     Args:
         bundle_name: name of the bundle to render
+        extension: file extension for the bundle
     """
     compressor = current_app.extensions['compressor']
 
@@ -25,23 +26,25 @@ def render_bundle(bundle_name):
     try:
         bundle = compressor.get_bundle(bundle_name)
     except CompressorException:
+        # bundle not found
+        abort(404)
+
+    # check the extension
+    if bundle.extension != extension:
         abort(404)
 
     content = bundle.get_content()
     return Response(content, mimetype=bundle.mimetype)
 
 
-@blueprint.route('/bundle/<bundle_name>/asset/<int:asset_index>/',
-                 defaults={'asset_name': None})
-@blueprint.route('/bundle/<bundle_name>/asset/<int:asset_index>/'
-                 '<path:asset_name>')
-def render_asset(bundle_name, asset_index, asset_name):
+@blueprint.route('/bundle/<bundle_name>/asset/<int:asset_index>.<extension>')
+def render_asset(bundle_name, asset_index, extension):
     """ Render a single source from an asset.
 
     Args:
-        asset_name: name of the asset to render
-        filename: One of the filenames in asset.sources. If the filename is
-            found in the asset, returns a 404 error.
+        bundle_name: name of the bundle to render
+        asset_index: index of the asset in `Bundle.assets`
+        extension: file extension for the bundle
     """
     compressor = current_app.extensions['compressor']
 
@@ -49,6 +52,7 @@ def render_asset(bundle_name, asset_index, asset_name):
     try:
         bundle = compressor.get_bundle(bundle_name)
     except CompressorException:
+        # bundle not found
         abort(404)
 
     try:
@@ -57,8 +61,8 @@ def render_asset(bundle_name, asset_index, asset_name):
         # asset not found
         abort(404)
 
-    # check the asset name
-    if asset_name is not None and asset_name != asset.name:
+    # check the extension
+    if bundle.extension != extension:
         abort(404)
 
     content = asset.content

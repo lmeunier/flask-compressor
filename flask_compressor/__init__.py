@@ -214,9 +214,11 @@ class Bundle(object):
     default_linked_template = '<link ref="external" href="{url}" '\
                               'type="{mimetype}">'
     default_mimetype = 'text/plain'
+    default_extension = 'txt'
 
     def __init__(self, name, assets=None, processors=None,
-                 inline_template=None, linked_template=None, mimetype=None):
+                 inline_template=None, linked_template=None, mimetype=None,
+                 extension=None):
         """ Initializes a :class:`Bundle` instance.
 
         Args:
@@ -236,6 +238,8 @@ class Bundle(object):
                 `<link ref='external' href='{url}' type='{mimetype}'>`)
             mimetype: the mimetype corresponding to the final content of the
                 bundle (default: `text/plain`)
+            extension: the file extension associated with the mimetype
+                (default: `txt`)
         """
         self.name = name
         self.assets = assets or []
@@ -243,6 +247,10 @@ class Bundle(object):
         self.inline_template = inline_template or self.default_inline_template
         self.linked_template = linked_template or self.default_linked_template
         self.mimetype = mimetype or self.default_mimetype
+        self.extension = extension or self.default_extension
+
+        for asset in self.assets:
+            asset.bundle = self
 
     def apply_processors(self, contents):
         """ Apply all processors to the provided data.
@@ -339,20 +347,22 @@ class Bundle(object):
                     content. (default: `True`)
         """
         if concatenate:
-            url = url_for('compressor.render_bundle', bundle_name=self.name)
-            return self.linked_template.format(url=url, mimetype=self.mimetype)
+            return self.linked_template.format(url=self.url, mimetype=self.mimetype)
         else:
-            urls = []
-            for index, asset in enumerate(self.assets):
-                urls.append(url_for('compressor.render_asset',
-                                    bundle_name=self.name,
-                                    asset_index=index,
-                                    asset_name=asset.name))
-
+            urls = [asset.url for asset in self.assets]
             return '\n'.join(
                 [self.linked_template.format(url=url, mimetype=self.mimetype)
                  for url in urls]
             )
+
+    @property
+    @memoized
+    def url(self):
+        return url_for(
+            'compressor.render_bundle',
+            bundle_name=self.name,
+            extension=self.extension
+        )
 
 
 class CSSBundle(Bundle):
@@ -361,6 +371,7 @@ class CSSBundle(Bundle):
     default_linked_template = '<link type="{mimetype}" rel="stylesheet" ' \
                               'href="{url}">'
     default_mimetype = 'text/css'
+    default_extension = 'css'
 
 
 class JSBundle(Bundle):
@@ -370,6 +381,7 @@ class JSBundle(Bundle):
     default_linked_template = '<script type="{mimetype}" src="{url}">' \
                               '</script>'
     default_mimetype = 'text/javascript'
+    default_extension = 'js'
 
 
 class Asset(object):
@@ -391,6 +403,7 @@ class Asset(object):
         """
         self._raw_content = content
         self.processors = processors or []
+        self.bundle = None
 
     def apply_processors(self, content):
         """ Apply all processors to the provided content.
@@ -425,6 +438,17 @@ class Asset(object):
     def raw_content(self):
         """ Return the raw content of the asset, without any modification. """
         return self._raw_content
+
+    @property
+    @memoized
+    def url(self):
+        return url_for(
+            'compressor.render_asset',
+            bundle_name=self.bundle.name,
+            asset_index=self.bundle.assets.index(self),
+            extension=self.bundle.extension,
+            name=self.name
+        )
 
 
 class FileAsset(Asset):
