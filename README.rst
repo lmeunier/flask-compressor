@@ -33,7 +33,11 @@ You must install dependencies required for each processor you want to use.
 Installation
 ------------
 
-- from PyPI (soon)
+- from PyPI:
+
+.. code:: bash
+
+   pip install Flask-Compressor
 
 - from Git:
 
@@ -154,6 +158,16 @@ If you already have `node.js <http://nodejs.org>`_ and `npm
 
     npm install -g less
 
+jsmin
+~~~~~
+
+Use `jsmin <https://pypi.python.org/pypi/jsmin>`_ to compress JavaScript. You
+must manually install jsmin if you want to use this processor.
+
+.. code:: bash
+
+   pip install jsmin
+
 
 Bundle templates
 ----------------
@@ -178,14 +192,15 @@ do something like this:
         assets=[Asset('/* some CSS properties */')],
         inline_template='<style type="{mimetype}">{content}</style>',
         linked_template='<link type="{mimetype}" rel="stylesheet" href="{url}">',
-        mimetype='text/css'
+        mimetype='text/css',
+        extension='css'
     )
 
 You can now render your bundle in your template, and either add the content
 inline or linked to an external file.
 
 Two helper classes are provided with Flask-Compressor with defaults values for
-templates (inline and linked) and the mimetype:
+templates (inline and linked), the mimetype and the extension:
 
 - `flask.ext.compressor.CSSBundle` (for CSS content)
 - `flask.ext.compressor.JSBundle` (for JavaScript code)
@@ -207,6 +222,19 @@ The way the `compressor` function render the content of the bundle is
 controlled by the `inline` argument. When `inline` is `True` (default value),
 the `inline_template` of the bundle is used. When `inline` is `False`, the
 `linked_template` is used.
+
+
+Blueprint
+---------
+
+A blueprint is automaticaly registered at the URL prefix `/_compressor/` when
+you add a Flask-Compressor extension instance to your Flask application. This
+blueprint is only used when bundles are not inlined in your templates
+(i.e., `inline=False` in the `compressor` template function).
+
+An URL to a bundle in build from the name of the bundle, a unique hash (md5
+calculated from the content) and the extension of the bundle (for example:
+`/_compressor/bundle/my_css_bundle_v836625e5ecabdada6dd84787e0f72a16.css`)
 
 
 Full example
@@ -243,7 +271,8 @@ processor.
 Credits
 -------
 
-The Flask-Compressor extension is maintained by `Laurent Meunier <http://www.deltalima.net/>`_.
+The Flask-Compressor extension is maintained by `Laurent Meunier
+<http://www.deltalima.net/>`_.
 
 
 Licenses
