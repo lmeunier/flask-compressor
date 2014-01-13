@@ -223,44 +223,64 @@ class BundleWithAssetsTestCase(unittest.TestCase):
             self.assertEqual(contents, inline_content)
 
     def test_get_linked_content(self):
-        linked_content = '<link ref="external" href="/_compressor/bundle/tes' \
-            't_bundle.txt" type="text/plain">'
         with self.app.test_request_context():
+            linked_content = '<link ' \
+                'ref="external" '\
+                'href="/_compressor/bundle/test_bundle_v{}.txt" '\
+                'type="text/plain">'.format(self.bundle.hash)
             content = self.bundle.get_linked_content()
             self.assertEqual(content, linked_content)
 
-        linked_content = '<link ref="external" href="/_compressor/bundle/tes' \
-            't_bundle/asset/0.txt" type="text/plain">\n<link ref="external" ' \
-            'href="/_compressor/bundle/test_bundle/asset/1.txt" type="text/p' \
-            'lain">'
-        with self.app.test_request_context():
+            linked_content = '<link ' \
+                'ref="external" '\
+                'href="/_compressor/bundle/test_bundle/asset/0_v{}.txt" ' \
+                'type="text/plain">\n' \
+                '<link '\
+                'ref="external" ' \
+                'href="/_compressor/bundle/test_bundle/asset/1_v{}.txt" ' \
+                'type="text/plain">'.format(
+                    self.bundle.assets[0].hash,
+                    self.bundle.assets[1].hash
+                )
             contents = self.bundle.get_linked_content(concatenate=False)
             self.assertEqual(contents, linked_content)
 
     def test_blueprint_urls(self):
         get = self.app.test_client().get
 
-        rv = get('/_compressor/bundle/test_bundle.txt')
-        self.assertEqual('FOOBARfirst asset\nsecond assetBARFOO',
-                         rv.data.decode('utf8'))
+        with self.app.test_request_context():
+            rv = get('/_compressor/bundle/test_bundle_v{}.txt'.format(
+                self.bundle.hash
+            ))
+            self.assertEqual('FOOBARfirst asset\nsecond assetBARFOO',
+                             rv.data.decode('utf8'))
 
-        rv = get('/_compressor/bundle/bundle_not_found')
-        self.assertEqual(rv.status_code, 404)
+            rv = get('/_compressor/bundle/bundle_not_found')
+            self.assertEqual(rv.status_code, 404)
 
-        rv = get('/_compressor/bundle/test_bundle/asset/0.txt')
-        self.assertEqual('FOOBARfirst asset', rv.data.decode('utf8'))
+            rv = get('/_compressor/bundle/test_bundle/asset/0_v{}.txt'.format(
+                self.bundle.assets[0].hash)
+            )
+            self.assertEqual('FOOBARfirst asset', rv.data.decode('utf8'))
 
-        rv = get('/_compressor/bundle/test_bundle/asset/0.css')
-        self.assertEqual(rv.status_code, 404)
+            rv = get('/_compressor/bundle/test_bundle/asset/0_v{}.txt'.format(
+                'wrong hash')
+            )
+            self.assertEqual(rv.status_code, 404)
 
-        rv = get('/_compressor/bundle/test_bundle/asset/1.txt')
-        self.assertEqual('second asset', rv.data.decode('utf8'))
+            rv = get('/_compressor/bundle/test_bundle/asset/0.css')
+            self.assertEqual(rv.status_code, 404)
 
-        rv = get('/_compressor/bundle/test_bundle/asset/2.txt')
-        self.assertEqual(rv.status_code, 404)
+            rv = get('/_compressor/bundle/test_bundle/asset/1_v{}.txt'.format(
+                self.bundle.assets[1].hash
+            ))
+            self.assertEqual('second asset', rv.data.decode('utf8'))
 
-        rv = get('/_compressor/bundle/bundle_not_found/asset/0.txt')
-        self.assertEqual(rv.status_code, 404)
+            rv = get('/_compressor/bundle/test_bundle/asset/2.txt')
+            self.assertEqual(rv.status_code, 404)
+
+            rv = get('/_compressor/bundle/bundle_not_found/asset/0.txt')
+            self.assertEqual(rv.status_code, 404)
 
     def test_cached_bundle_content(self):
         with self.app.test_request_context():
@@ -322,6 +342,7 @@ class FileAssetTestCase(AssetTestCase):
         self.asset = FileAsset(self.filename, self.asset_processors)
 
         bundle = Bundle(name='test_bundle', assets=[self.asset])
+        self.bundle = bundle
         self.compressor.register_bundle(bundle)
 
     def tearDown(self):
@@ -335,9 +356,11 @@ class FileAssetTestCase(AssetTestCase):
         self.assertIn('Absolute filename are not supported', str(cm.exception))
 
     def test_blueprint_urls(self):
-        get = self.app.test_client().get
-        rv = get('/_compressor/bundle/test_bundle/asset/0.txt')
-        self.assertEqual(self.result_asset_content, rv.data.decode('utf8'))
+        with self.app.test_request_context():
+            get = self.app.test_client().get
+            rv = get('/_compressor/bundle/test_bundle/asset/0_v{}.txt'
+                     .format(self.bundle.hash))
+            self.assertEqual(self.result_asset_content, rv.data.decode('utf8'))
 
 
 class MultipleProcessorsTestCase(unittest.TestCase):
@@ -420,17 +443,24 @@ class JSBundleTestCase(unittest.TestCase):
             self.assertEqual(contents, inline_content)
 
     def test_get_linked_content(self):
-        linked_content = '<script type="text/javascript" ' \
-            'src="/_compressor/bundle/test_bundle.js"></script>'
         with self.app.test_request_context():
+            linked_content = '<script type="text/javascript" ' \
+                'src="/_compressor/bundle/test_bundle_v{}.js"></script>' \
+                .format(
+                    self.bundle.hash
+                )
             content = self.bundle.get_linked_content()
             self.assertEqual(content, linked_content)
 
-        linked_content = '<script type="text/javascript" ' \
-            'src="/_compressor/bundle/test_bundle/asset/0.js"></script>\n' \
-            '<script type="text/javascript" ' \
-            'src="/_compressor/bundle/test_bundle/asset/1.js"></script>'
-        with self.app.test_request_context():
+            linked_content = '<script type="text/javascript" ' \
+                'src="/_compressor/bundle/test_bundle/asset/0_v{}.js">' \
+                '</script>\n' \
+                '<script type="text/javascript" ' \
+                'src="/_compressor/bundle/test_bundle/asset/1_v{}.js">' \
+                '</script>'.format(
+                    self.bundle.assets[0].hash,
+                    self.bundle.assets[1].hash
+                )
             contents = self.bundle.get_linked_content(concatenate=False)
             self.assertEqual(contents, linked_content)
 
@@ -469,17 +499,23 @@ class CSSBundleTestCase(unittest.TestCase):
             self.assertEqual(contents, inline_content)
 
     def test_get_linked_content(self):
-        linked_content = '<link type="text/css" rel="stylesheet" ' \
-            'href="/_compressor/bundle/test_bundle.css">'
         with self.app.test_request_context():
+            linked_content = '<link '\
+                'type="text/css" rel="stylesheet" ' \
+                'href="/_compressor/bundle/test_bundle_v{}.css">'.format(
+                    self.bundle.hash
+                )
             content = self.bundle.get_linked_content()
             self.assertEqual(content, linked_content)
 
-        linked_content = '<link type="text/css" rel="stylesheet" ' \
-            'href="/_compressor/bundle/test_bundle/asset/0.css">\n' \
-            '<link type="text/css" rel="stylesheet" ' \
-            'href="/_compressor/bundle/test_bundle/asset/1.css">'
-        with self.app.test_request_context():
+            linked_content = '<link type="text/css" rel="stylesheet" ' \
+                'href="/_compressor/bundle/test_bundle/asset/0_v{}.css">\n' \
+                '<link type="text/css" rel="stylesheet" ' \
+                'href="/_compressor/bundle/test_bundle/asset/1_v{}.css">' \
+                .format(
+                    self.bundle.assets[0].hash,
+                    self.bundle.assets[1].hash
+                )
             contents = self.bundle.get_linked_content(concatenate=False)
             self.assertEqual(contents, linked_content)
 

@@ -13,6 +13,7 @@ from __future__ import unicode_literals, absolute_import, division, \
     print_function
 import os
 import functools
+import hashlib
 from flask import current_app, url_for
 from .blueprint import blueprint as compressor_blueprint
 from .templating import compressor as compressor_template_helper
@@ -361,8 +362,15 @@ class Bundle(object):
         return url_for(
             'compressor.render_bundle',
             bundle_name=self.name,
-            extension=self.extension
+            bundle_hash=self.hash,
+            bundle_extension=self.extension,
         )
+
+    @property
+    @memoized
+    def hash(self):
+        content = self.get_content()
+        return hashlib.md5(content.encode('utf-8')).hexdigest()
 
 
 class CSSBundle(Bundle):
@@ -445,10 +453,16 @@ class Asset(object):
         return url_for(
             'compressor.render_asset',
             bundle_name=self.bundle.name,
+            bundle_extension=self.bundle.extension,
             asset_index=self.bundle.assets.index(self),
-            extension=self.bundle.extension,
+            asset_hash=self.hash,
             name=self.name
         )
+
+    @property
+    @memoized
+    def hash(self):
+        return hashlib.md5(self.content.encode('utf-8')).hexdigest()
 
 
 class FileAsset(Asset):
