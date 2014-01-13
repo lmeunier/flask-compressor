@@ -7,6 +7,7 @@
 from __future__ import unicode_literals, absolute_import, division, \
     print_function
 from flask import Blueprint, current_app, abort, Response
+from .exceptions import CompressorException
 
 
 blueprint = Blueprint('compressor', __name__)
@@ -23,7 +24,6 @@ def render_bundle(bundle_name, bundle_hash, bundle_extension):
     """
     compressor = current_app.extensions['compressor']
 
-    from . import CompressorException
     try:
         bundle = compressor.get_bundle(bundle_name)
     except CompressorException:
@@ -54,7 +54,6 @@ def render_asset(bundle_name, bundle_extension, asset_index, asset_hash):
     """
     compressor = current_app.extensions['compressor']
 
-    from . import CompressorException
     try:
         bundle = compressor.get_bundle(bundle_name)
     except CompressorException:

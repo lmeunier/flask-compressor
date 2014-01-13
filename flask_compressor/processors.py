@@ -8,12 +8,7 @@ from __future__ import unicode_literals, absolute_import, division, \
     print_function
 import subprocess
 from flask import current_app
-from . import CompressorException
-
-
-class CompressorProcessorException(CompressorException):
-    """ Base exception for all exceptions raised by processors. """
-    pass
+from .exceptions import CompressorProcessorException
 
 
 def cssmin(content):

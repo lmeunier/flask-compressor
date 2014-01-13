@@ -15,8 +15,10 @@ import os
 import functools
 import hashlib
 from flask import current_app, url_for
+from .exceptions import CompressorException
 from .blueprint import blueprint as compressor_blueprint
 from .templating import compressor as compressor_template_helper
+from .processors import DEFAULT_PROCESSORS
 
 
 class memoized(object):
@@ -56,12 +58,6 @@ class memoized(object):
     def __get__(self, obj, objtype):
         """ Support instance method """
         return functools.partial(self.__call__, obj)
-
-
-class CompressorException(Exception):
-    """ Base exception for all exceptions raised by the Flask-Compressor
-    extension. """
-    pass
 
 
 class Compressor(object):
@@ -148,7 +144,6 @@ class Compressor(object):
         listed in `flask_compressor.processors.DEFAULT_PROCESSORS`.
         """
 
-        from .processors import DEFAULT_PROCESSORS
         for processor in DEFAULT_PROCESSORS:
             self.register_processor(processor)
 
