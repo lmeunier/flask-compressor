@@ -22,7 +22,7 @@ case with Google App Engine).
 Requirements
 ------------
 
-- Python 2.7 or Python 3.3
+- Tested with Python 2.7, 3.3, 3.4 and PyPy
 - Flask >= 0.10
 - scripts or Python modules to process your assets
 
@@ -132,8 +132,8 @@ the `processors` argument.
 Available processors
 --------------------
 
-Flask-Compressor is shipped with only two processors. More processors will be
-added soon.
+Flask-Compressor is shipped with 3 processors. More processors will be added
+soon.
 
 
 cssmin
@@ -278,6 +278,6 @@ The Flask-Compressor extension is maintained by `Laurent Meunier
 Licenses
 --------
 
-Flask-Compressor is Copyright (c) 2013 Laurent Meunier. It is free software,
-and may be redistributed under the terms specified in the LICENSE file (a
-3-clause BSD License).
+Flask-Compressor is Copyright (c) 2013-2014 Laurent Meunier. It is free
+software, and may be redistributed under the terms specified in the LICENSE
+file (a 3-clause BSD License).
