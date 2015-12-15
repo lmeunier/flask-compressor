@@ -244,7 +244,7 @@ Full example
 
     from flask import Flask
     from flask.ext.flatpages import pygments_style_defs
-    from flask.ext.compressor import Compressor, Asset, Bundle
+    from flask.ext.compressor import Compressor, Asset, FileAsset, CSSBundle
 
     app = Flask(__name__)
     compressor = Compressor(app)
