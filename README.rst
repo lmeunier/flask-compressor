@@ -22,7 +22,7 @@ case with Google App Engine).
 Requirements
 ------------
 
-- Tested with Python 2.7, 3.3, 3.4 and PyPy
+- Tested with Python 2.7 and 3.6
 - Flask >= 0.10
 - scripts or Python modules to process your assets
 
