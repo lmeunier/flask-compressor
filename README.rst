@@ -54,7 +54,7 @@ Initialize the Flask-Compressor extension
 .. code:: python
 
     from flask import Flask
-    from flask.ext.compressor import Compressor
+    from flask_compressor import Compressor
 
     app = Flask(__name__)
     compressor = Compressor(app)
@@ -75,7 +75,7 @@ processors.
 
 .. code:: python
 
-    from flask.ext.compressor import Asset
+    from flask_compressor import Asset
 
     css_content = '''
         html {
@@ -95,7 +95,7 @@ application to build the full path to the file.
 
 .. code:: python
 
-    from flask.ext.compressor import FileAsset
+    from flask_compressor import FileAsset
 
     my_asset = FileAsset(filename='css/styles.less', processors=['lesscss'])
 
@@ -114,7 +114,7 @@ instantiating a ``Bundle`` object with assets and processors.
 
 .. code:: python
 
-    from flask.ext.compressor import Bundle
+    from flask_compressor import Bundle
 
     my_bundle = Bundle('name_for_my_bundle', assets=[asset1, asset2], processors=['cssmin'])
     compressor.register_bundle(my_bundle)
@@ -202,8 +202,8 @@ inline or linked to an external file.
 Two helper classes are provided with Flask-Compressor with defaults values for
 templates (inline and linked), the mimetype and the extension:
 
-- ``flask.ext.compressor.CSSBundle`` (for CSS content)
-- ``flask.ext.compressor.JSBundle`` (for JavaScript code)
+- ``flask_compressor.CSSBundle`` (for CSS content)
+- ``flask_compressor.JSBundle`` (for JavaScript code)
 
 
 Render bundles in templates
@@ -243,8 +243,8 @@ Full example
 .. code:: python
 
     from flask import Flask
-    from flask.ext.flatpages import pygments_style_defs
-    from flask.ext.compressor import Compressor, Asset, FileAsset, CSSBundle
+    from flask_flatpages import pygments_style_defs
+    from flask_compressor import Compressor, Asset, FileAsset, CSSBundle
 
     app = Flask(__name__)
     compressor = Compressor(app)

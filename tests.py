@@ -12,9 +12,9 @@ import os
 import unittest
 import flask
 import tempfile
-from flask.ext.compressor import Compressor, Bundle, Asset, FileAsset, \
+from flask_compressor import Compressor, Bundle, Asset, FileAsset, \
     CompressorException, JSBundle, CSSBundle
-from flask.ext.compressor.processors import DEFAULT_PROCESSORS
+from flask_compressor.processors import DEFAULT_PROCESSORS
 
 
 class ProcessorsTestCase(unittest.TestCase):
